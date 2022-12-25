@@ -11,30 +11,17 @@ namespace ConsoleApp2
     {
         class Program
         {
-
-            public static void Main()
+            public static void Main(string[] args)
             {
                 List<List<string>> words;
                 List<List<string>> longestWords;
-
-
-                Console.WriteLine("Введите '0', если хотите работать с файлом");
-                int choose = int.Parse(Console.ReadLine());
-                if (choose == 0)
+                if (args.Length >= 3)
                 {
-                    Console.WriteLine("Введите путь файла");
-                    string pathfile = Console.ReadLine();
-
-                    words = InputTextFromFile(pathfile);
+                    words = InputTextFromFile(args[0], int.Parse(args[2]));
                     longestWords = ShowLongestWords(words);
-                    Console.WriteLine("Введите '0', вывести результат в в файл");
-
-                    choose = int.Parse(Console.ReadLine());
-                    if (choose == 0)
+                    if (args.Length >= 2)
                     {
-                        Console.WriteLine("Введите имя файла");
-                        pathfile = Console.ReadLine();
-                        OutputWordsToFile(longestWords, pathfile);
+                        //OutputWordsToFile(longestWords, args[1]);
                     }
                 }
                 else
@@ -45,6 +32,7 @@ namespace ConsoleApp2
 
                 Console.ReadKey();
             }
+
 
 
             private static void OutputWordsToFile(List<List<string>> longestWords, string fileName)
@@ -72,12 +60,62 @@ namespace ConsoleApp2
 
             }
 
-            private static List<List<string>> InputTextFromFile(string fileName)
+            private static List<List<string>> InputTextFromFile(string fileName, int n)
             {
                 List<List<string>> words = new List<List<string>>();
-                words = File.ReadAllLines(fileName)
-                    .Select(line => new List<string>(line.Split(' ')))
-                    .ToList();
+
+
+                StreamReader sr = File.OpenText(fileName);
+                var wordStringBuilder = new List<StringBuilder>();
+
+                var ministring = new StringBuilder();
+                Console.WriteLine($"Объём данных в потоке: {sr.BaseStream.Length}");
+
+                try
+                {
+
+                   
+
+                    char[] buffer = new char[n];
+
+
+                    do
+                    {
+                        n = sr.Read(buffer, 0, n);
+                        int j = 0;
+                        for (int i = 0; i < n; i++)
+                        {
+                            if (buffer[i] == '\n')
+                            {
+                                j++;
+                                wordStringBuilder.Add(ministring);
+                                ministring= new StringBuilder();
+
+                            }
+                            else
+                            {
+                                ministring.Append(buffer[i].ToString());
+                            }
+                            
+
+                        }
+                    }
+                    while (n != 0);
+
+                    sr.Close();
+                }
+                catch (Exception e) 
+                {
+                    Console.WriteLine(e.Message);
+                }
+
+
+
+
+
+                words = wordStringBuilder
+                            .Select(line => new List<string>(line.ToString().Split(' ')))
+                            .ToList();
 
 
 
@@ -112,13 +150,13 @@ namespace ConsoleApp2
                 longestWords = new List<List<string>>();
                 for (int i = 0; i < linesCount; i++)
                 {
-                   
+
                     List<string> temp = new List<string>();
 
                     foreach (var word in words[i])
                     {
                         temp.Add(String.Join(", ", word.Split(' ').Where(x => x.Contains('-') || x.Contains('_')).ToArray()));
-                                                
+
                     }
                     longestWords.Add(temp);
 
